@@ -1,0 +1,14 @@
+<!--
+Copyright (c) 2026 Alvin Wilsen Chan Chua
+GitHub: chuaalvw-y
+Licensed under the Alvin Wilsen Chan Chua Proprietary Use-Only License.
+See LICENSE.txt in the project root for full license information.
+-->
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ChuA.Authentication/ChuA.Authentication.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ChuA.Authentication.Tests/ChuA.Authentication.Tests.csproj" />
+  </Folder>
+</Solution>

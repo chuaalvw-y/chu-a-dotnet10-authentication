@@ -1,0 +1,26 @@
+<!--
+Copyright (c) 2026 Alvin Wilsen Chan Chua
+GitHub: chuaalvw-y
+Licensed under the Alvin Wilsen Chan Chua Proprietary Use-Only License.
+See LICENSE.txt in the project root for full license information.
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+    <PackageId>ChuA.Authentication</PackageId>
+    <Description>Reusable enterprise authentication and authorization helpers for ASP.NET Core applications.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
+  </ItemGroup>
+
+</Project>
