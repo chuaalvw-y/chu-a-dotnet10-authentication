@@ -20,6 +20,12 @@ public static class ChuAAuthenticationDefaults
     public const string ActiveDirectoryProvider = "ActiveDirectory";
     public const string CloudProvider = "CloudProvider";
     public const string ApiKeyProvider = "ApiKey";
+
+    /// <summary>Provider key for an interactive cookie + OIDC code-flow web app (any OIDC IdP).</summary>
+    public const string OidcWebAppProvider = "OidcWebApp";
+
+    /// <summary>Provider key for an interactive cookie + OIDC code-flow web app backed by Auth0.</summary>
+    public const string Auth0WebAppProvider = "Auth0WebApp";
     public const string DefaultApiKeyHeaderName = "X-API-Key";
     public const string DefaultPermissionClaimType = "permissions";
     public const string DefaultScopeClaimType = "scope";

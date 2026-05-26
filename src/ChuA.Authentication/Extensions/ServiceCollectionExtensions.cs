@@ -11,7 +11,9 @@ using ChuA.Authentication.Handlers;
 using ChuA.Authentication.Providers;
 using ChuA.Authentication.Services;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -109,6 +111,8 @@ public static class ServiceCollectionExtensions
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IAuthenticationProviderConfigurator, ActiveDirectoryAuthenticationProviderConfigurator>());
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IAuthenticationProviderConfigurator, CloudProviderAuthenticationProviderConfigurator>());
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IAuthenticationProviderConfigurator, ApiKeyAuthenticationProviderConfigurator>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IAuthenticationProviderConfigurator, OidcWebAppAuthenticationProviderConfigurator>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IAuthenticationProviderConfigurator, Auth0WebAppAuthenticationProviderConfigurator>());
         services.AddScoped<ICurrentUserContext, CurrentUserContext>();
         services.AddSingleton<IClaimsMappingService, ClaimsMappingService>();
         services.AddSingleton<IPermissionService, PermissionService>();
@@ -132,8 +136,23 @@ public static class ServiceCollectionExtensions
             return options.DefaultScheme;
         }
 
-        return string.Equals(provider.Type, ChuAAuthenticationDefaults.ApiKeyProvider, StringComparison.OrdinalIgnoreCase)
-            ? ChuAAuthenticationDefaults.ApiKeyScheme
-            : JwtBearerDefaults.AuthenticationScheme;
+        if (string.Equals(provider.Type, ChuAAuthenticationDefaults.ApiKeyProvider, StringComparison.OrdinalIgnoreCase))
+        {
+            return ChuAAuthenticationDefaults.ApiKeyScheme;
+        }
+
+        // Interactive cookie + OIDC web-app provider types expose the OIDC scheme as their
+        // "provider scheme"; the configurator pairs it with a cookie scheme internally and
+        // pins the AuthenticationOptions defaults so cookies own authenticate/sign-in.
+        if (IsOidcWebAppProvider(provider.Type))
+        {
+            return OpenIdConnectDefaults.AuthenticationScheme;
+        }
+
+        return JwtBearerDefaults.AuthenticationScheme;
     }
+
+    private static bool IsOidcWebAppProvider(string? providerType)
+        => string.Equals(providerType, ChuAAuthenticationDefaults.OidcWebAppProvider, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(providerType, ChuAAuthenticationDefaults.Auth0WebAppProvider, StringComparison.OrdinalIgnoreCase);
 }
