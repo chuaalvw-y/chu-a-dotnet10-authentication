@@ -9,6 +9,7 @@ using ChuA.Authentication.Extensions;
 using ChuA.Authentication.Abstractions;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -40,6 +41,48 @@ public sealed class ProviderSelectionTests
 
         var jwtOptions = provider.GetRequiredService<IOptionsMonitor<JwtBearerOptions>>().Get(JwtBearerDefaults.AuthenticationScheme);
         Assert.Equal("https://dev-example.us.auth0.com", jwtOptions.Authority);
+    }
+
+    [Fact]
+    public void AddChuAAuthenticationPreservesExplicitAuthorityForAuth0()
+    {
+        var services = new ServiceCollection();
+        var configuration = BuildConfiguration(new Dictionary<string, string?>
+        {
+            ["ChuAAuthentication:Provider"] = "Auth0",
+            ["ChuAAuthentication:Domain"] = "dev-example.us.auth0.com",
+            ["ChuAAuthentication:Authority"] = "https://login.example.com/",
+            ["ChuAAuthentication:Audience"] = "api://trust"
+        });
+
+        services.AddChuAAuthentication(configuration);
+        using var provider = services.BuildServiceProvider();
+
+        var jwtOptions = provider.GetRequiredService<IOptionsMonitor<JwtBearerOptions>>().Get(JwtBearerDefaults.AuthenticationScheme);
+
+        Assert.Equal("https://login.example.com", jwtOptions.Authority);
+    }
+
+    [Fact]
+    public void AddChuAAuthenticationSendsOidcAudienceAsAuthorizationParameter()
+    {
+        var services = new ServiceCollection();
+        var configuration = BuildConfiguration(new Dictionary<string, string?>
+        {
+            ["ChuAAuthentication:ProviderName"] = "OidcWebApp",
+            ["ChuAAuthentication:ClientId"] = "web-client",
+            ["ChuAAuthentication:Authority"] = "https://idp.example.com",
+            ["ChuAAuthentication:Audience"] = "api://enterprise-api"
+        });
+
+        services.AddChuAAuthentication(configuration);
+        using var provider = services.BuildServiceProvider();
+
+        var oidcOptions = provider.GetRequiredService<IOptionsMonitor<OpenIdConnectOptions>>().Get(OpenIdConnectDefaults.AuthenticationScheme);
+
+        Assert.Equal("api://enterprise-api", oidcOptions.AdditionalAuthorizationParameters["audience"]);
+        Assert.Equal("web-client", oidcOptions.TokenValidationParameters.ValidAudience);
+        Assert.NotEqual("api://enterprise-api", oidcOptions.TokenValidationParameters.ValidAudience);
     }
 
     [Fact]

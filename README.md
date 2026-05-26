@@ -50,6 +50,8 @@ Built-in provider types:
 - `ActiveDirectory`
 - `CloudProvider`
 - `ApiKey`
+- `OidcWebApp`
+- `Auth0WebApp`
 
 Use `ProviderName` for a single provider, or `DefaultProvider` plus `Providers` for named provider configuration.
 
@@ -154,6 +156,29 @@ Named providers:
   }
 }
 ```
+
+For JWT bearer APIs, Auth0 `Domain` is a convenience setting. When `Authority` is omitted, the library derives `Authority` as `https://{Domain}/`; when `Authority` is provided explicitly, it wins.
+
+## OIDC Web Apps
+
+Interactive web applications can use the cookie + OIDC code-flow providers:
+
+```json
+{
+  "ChuAAuthentication": {
+    "ProviderName": "Auth0WebApp",
+    "Domain": "dev-example.us.auth0.com",
+    "ClientId": "web-client-id",
+    "ClientSecret": "<secret-from-secure-configuration>",
+    "Audience": "https://trust-account-api",
+    "Scopes": [ "openid", "profile", "email", "offline_access" ]
+  }
+}
+```
+
+For OIDC web-app sign-in, `ClientId` remains the ID token audience used by the OIDC handler for ID token validation. `Audience` is sent on the authorization challenge as the `audience` parameter so providers such as Auth0 issue an API access token. It is not used as `TokenValidationParameters.ValidAudience` for the ID token.
+
+`Auth0WebApp` also supports the same `Domain` convenience behavior as the Auth0 JWT preset: `Domain` becomes `https://{Domain}/` unless `Authority` is explicitly configured.
 
 ## Microsoft Entra ID Preset
 
@@ -288,6 +313,35 @@ public sealed class AccountService(ICurrentUserContext currentUser)
 ```
 
 `ICurrentUserContext` exposes `UserId`, `UserName`, `Email`, `Roles`, `Permissions`, `Scopes`, raw `Claims`, `IsAuthenticated`, and helper methods for roles, permissions, and scopes.
+
+## Claims Enrichment
+
+The built-in claims transformation always runs library claim mapping first. Applications can then add custom enrichment without replacing the library transformation:
+
+```csharp
+using ChuA.Authentication.Claims;
+
+builder.Services.AddScoped<IClaimsEnricher, MyCustomClaimsEnricher>();
+builder.Services.AddChuAAuthentication(builder.Configuration);
+```
+
+```csharp
+public sealed class MyCustomClaimsEnricher : IClaimsEnricher
+{
+    public Task<ClaimsPrincipal> EnrichAsync(ClaimsPrincipal principal)
+    {
+        // Add application-specific claims or return a replacement principal.
+        return Task.FromResult(principal);
+    }
+}
+```
+
+Claims transformation order is:
+
+1. Library claim mapping
+2. Registered `IClaimsEnricher` services in DI registration order
+
+Each enricher receives the principal returned by the previous step, so an enricher can either mutate the current principal or return a new one. During a single HTTP request, the transformation stores the current principal in `HttpContext.Items` while enrichment is in progress. If an enricher re-enters authentication, the reentrant call returns the stored principal immediately to avoid recursive transformation and stack overflow. Without an active `HttpContext`, transformation still runs normally.
 
 ## Secure Defaults
 

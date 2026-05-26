@@ -126,7 +126,10 @@ public sealed class OidcWebAppAuthenticationProviderConfigurator : IAuthenticati
 
             if (!string.IsNullOrWhiteSpace(provider.Audience))
             {
-                oidcOptions.TokenValidationParameters.ValidAudience = provider.Audience;
+                // In OIDC code flow, ClientId validates the ID token audience. Audience is
+                // sent as an authorization parameter to request an API access token; do not
+                // assign it to TokenValidationParameters.ValidAudience.
+                oidcOptions.AdditionalAuthorizationParameters["audience"] = provider.Audience;
             }
         });
 

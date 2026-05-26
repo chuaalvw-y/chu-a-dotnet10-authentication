@@ -29,13 +29,7 @@ public sealed class Auth0WebAppAuthenticationProviderConfigurator : IAuthenticat
     /// <inheritdoc />
     public void Configure(AuthenticationBuilder builder, ChuAAuthenticationOptions options, ChuAProviderOptions provider)
     {
-        ArgumentNullException.ThrowIfNull(provider);
-
-        if (string.IsNullOrWhiteSpace(provider.Authority) && !string.IsNullOrWhiteSpace(provider.Domain))
-        {
-            provider.Authority = $"https://{provider.Domain.TrimEnd('/')}/";
-        }
-
+        Auth0AuthorityNormalizer.ApplyDomainAuthorityFallback(provider);
         OidcWebAppAuthenticationProviderConfigurator.ConfigureOidcWebApp(builder, options, provider);
     }
 }

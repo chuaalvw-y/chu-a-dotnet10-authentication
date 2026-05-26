@@ -16,11 +16,7 @@ public sealed class Auth0AuthenticationProviderConfigurator : IAuthenticationPro
 
     public void Configure(AuthenticationBuilder builder, ChuAAuthenticationOptions options, ChuAProviderOptions provider)
     {
-        if (string.IsNullOrWhiteSpace(provider.Authority) && !string.IsNullOrWhiteSpace(provider.Domain))
-        {
-            provider.Authority = $"https://{provider.Domain.TrimEnd('/')}/";
-        }
-
+        Auth0AuthorityNormalizer.ApplyDomainAuthorityFallback(provider);
         JwtAuthenticationProviderConfigurator.ConfigureJwtBearer(builder, options, provider);
     }
 }

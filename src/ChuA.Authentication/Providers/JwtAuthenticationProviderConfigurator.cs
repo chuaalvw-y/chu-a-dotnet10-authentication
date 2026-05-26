@@ -21,6 +21,7 @@ public sealed class JwtAuthenticationProviderConfigurator : IAuthenticationProvi
 
     internal static void ConfigureJwtBearer(AuthenticationBuilder builder, ChuAAuthenticationOptions options, ChuAProviderOptions provider)
     {
+        Auth0AuthorityNormalizer.ApplyDomainAuthorityFallback(provider);
         ValidateJwtProvider(provider, options);
 
         var scheme = string.IsNullOrWhiteSpace(provider.Scheme) ? JwtBearerDefaults.AuthenticationScheme : provider.Scheme;
